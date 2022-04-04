@@ -97,6 +97,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\SFML-2.5.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freetype.lib;openal32.lib;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-main-d.lib;sfml-system-d.lib;sfml-window-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ShowProgress>LinkVerbose</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -151,7 +152,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProgrammLogic.cpp" />
     <ClCompile Include="Settings.cpp" />
-    <ClCompile Include="Sprites.cpp" />
     <ClCompile Include="Users.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -159,7 +159,6 @@
     <ClInclude Include="includes.h" />
     <ClInclude Include="ProgrammLogic.h" />
     <ClInclude Include="Settings.h" />
-    <ClInclude Include="Sprites.h" />
     <ClInclude Include="Users.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

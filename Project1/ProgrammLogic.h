@@ -6,6 +6,7 @@ namespace Game {
     using namespace sf;
 
     struct GameText { Text text; std::string name; IntRect rect; };
+    struct Position { int x; int y; };
 
 
     class ProgrammLogic {
@@ -13,14 +14,20 @@ namespace Game {
         Font font_;
         std::string fontPath_;
         bool isMenu_;
+        std::queue<std::string> errorQueue_;
 
     private:
-        GameText createButton(const std::string&& str, int x, int y, bool relativePosition = false);
         template <typename... T>
         std::vector<GameText> createMenu(T&& ...args);
+        void toLog(std::string&& str);
+        std::string currentDateTime();
+
+        GameText createButton(const std::string&& str, int x, int y, bool relativePosition = false);
+        std::string_view getActiveItemMenu(std::vector<GameText>& menu, const RenderWindow& window);
         std::string strToLower(std::string str);
         void startGame(RenderWindow& window);
-        std::string_view getActiveItemMenu(std::vector<GameText>& menu, const RenderWindow& window);
+        bool readEvent(RenderWindow& window);
+        std::pair<Sprite, bool> gameSprite(const std::string& path, const Position& pos);
     public:
         ProgrammLogic();
         void loop();
@@ -42,6 +49,7 @@ namespace Game {
     template<typename ...T>
     inline std::vector<GameText> ProgrammLogic::createMenu(T&& ...args)
     {
+
         std::vector<std::string> v{std::forward<T>(args)...};
         std::vector<GameText> vec;
         vec.reserve(v.size());
@@ -52,7 +60,7 @@ namespace Game {
             if (el.size() < minLength) minLength = el.size();
             });
 
-        size_t centerWidth{ Settings::windowWidth >> 1 };
+        size_t centerWidth{ 800 >> 1 };
         size_t centerHeight{ Settings::windowHeight >> 1 };
         size_t posHeight{ centerHeight - indent * v.size() };
 
