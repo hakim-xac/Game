@@ -4,13 +4,7 @@ namespace Game {
 
     void ProgrammLogic::toLog(std::string&& str)
     {
-        errorQueue_.push(currentDateTime());
-        errorQueue_.push(str);
-    }
-
-    std::string ProgrammLogic::currentDateTime()
-    {
-        return "";              //TODO
+        errorQueue_.push(str);        
     }
 
 
@@ -47,22 +41,23 @@ namespace Game {
         return str;
     }
 
+    void ProgrammLogic::delimiter(char c, std::ostream& out)
+    {
+        out.fill(c);
+        out.width(Settings::maxLengthTextInLog);
+        out << "#" << "#\n";
+    }
+
+    void ProgrammLogic::stringToOut(const std::string& str, std::ostream& out) const
+    {
+        std::cerr.fill(' ');
+        std::cerr.width(Settings::maxLengthTextInLog);
+        std::cerr << str << "#" << "\n";
+    }
+
     void ProgrammLogic::startGame(RenderWindow& window)
     {
-        auto [hero, isCreateHero] = gameSprite( "sprites/rob2.png", Position{Settings::heroWidth, Settings::heroHeight }) ;
-        if (!isCreateHero) {
-            toLog("--------------------------------------------------------------------------------------");
-            toLog("FileNotFound");
-            toLog("gameSprite(\"sprites /rob2.png\", Position{Settings::heroWidth, Settings::heroHeight})");
-            toLog("--------------------------------------------------------------------------------------");
-        }
-        Image heroImg;
-        heroImg.loadFromFile("sprites/rob2.png");
-        Texture heroTexture;
-        heroTexture.loadFromImage(heroImg);
-        Sprite heroSprite{ heroTexture, IntRect{ 0, 0,Settings::heroWidth, Settings::heroHeight } };
-
-        heroSprite.setPosition(
+        hero_.setPosition(
             static_cast<float>((Settings::windowWidth - Settings::heroWidth) >> 1)
             , static_cast<float>((Settings::windowHeight - Settings::heroHeight) >> 1)
         );
@@ -86,16 +81,16 @@ namespace Game {
             if (Keyboard::isKeyPressed(Keyboard::Left) || Keyboard::isKeyPressed(Keyboard::A)) {
                 isKeyPresed = true;
                 horizontDirection = Direction::Left;
-                heroSprite.move(-speed, 0);
-                heroSprite.setTextureRect(IntRect{
+                hero_.move(-speed, 0);
+                hero_.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                     });
             }
             else if (Keyboard::isKeyPressed(Keyboard::Right) || Keyboard::isKeyPressed(Keyboard::D)) {
                 isKeyPresed = true;
                 horizontDirection = Direction::Right;
-                heroSprite.move(speed, 0);
-                heroSprite.setTextureRect(IntRect{
+                hero_.move(speed, 0);
+                hero_.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                     });
             }
@@ -104,50 +99,49 @@ namespace Game {
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    heroSprite.setTextureRect(IntRect{
+                    hero_.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 default:
-                    heroSprite.setTextureRect(IntRect{
+                    hero_.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 }
-                heroSprite.move(0, -speed);
+                hero_.move(0, -speed);
             }
             else if (Keyboard::isKeyPressed(Keyboard::Down) || Keyboard::isKeyPressed(Keyboard::S)) {
                 isKeyPresed = true;
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    heroSprite.setTextureRect(IntRect{
+                    hero_.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 default:
-                    heroSprite.setTextureRect(IntRect{
+                    hero_.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 }
-                heroSprite.move(0, speed);
+                hero_.move(0, speed);
             }
             if (!isKeyPresed) {
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    heroSprite.setTextureRect(IntRect{ Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight });
+                    hero_.setTextureRect(IntRect{ Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight });
                     break;
                 default:
-                    heroSprite.setTextureRect(IntRect{ 0, 0, Settings::heroWidth, Settings::heroHeight });
+                    hero_.setTextureRect(IntRect{ 0, 0, Settings::heroWidth, Settings::heroHeight });
                     break;
                 }                
             }
           
             window.clear();
-            window.draw(heroSprite);
-            window.draw(hero);
+            window.draw(hero_);
             window.display();
         }
     }
@@ -165,15 +159,49 @@ namespace Game {
         return false;
     }
 
-    std::pair<Sprite, bool> ProgrammLogic::gameSprite(const std::string& path, const Position& pos)
+    void ProgrammLogic::readErrors(RenderWindow& window)
     {
-        Image img;
-        if (!img.loadFromFile(path)) return std::make_pair(Sprite(), false);
+        if (!errorQueue_.empty()) {
+            window.close();
+            std::cerr.setf(std::ios::left, std::ios::adjustfield);
+            while (!errorQueue_.empty()) {
 
-        Texture texture;
-        if( !texture.loadFromFile(path)) return std::make_pair(Sprite(), false);
-        Sprite sprite{ texture, IntRect{ 0, 0,Settings::heroWidth, Settings::heroHeight } };
-        return std::make_pair(sprite, true);
+                delimiter();
+                delimiter(' ');
+                stringToOut("# time: " + timeToString(std::time(nullptr)));
+                stringToOut("# error: " + errorQueue_.front() + "\"");
+                delimiter(' ');
+                delimiter();
+
+                errorQueue_.pop();
+            }
+        }
+    }
+
+    std::string ProgrammLogic::timeToString(std::time_t&& time)
+    {
+        std::tm tm;
+        localtime_s(&tm, &time);
+        std::stringstream ss;
+        ss << tm.tm_mday << "." << tm.tm_mon << "." << tm.tm_year+1900 << " "
+            << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec;
+        return ss.str();
+    }
+
+    std::unique_ptr<Sprite> ProgrammLogic::gameSprite(const std::string& path, const Position& pos, RenderWindow& window)
+    {
+        std::unique_ptr<Image> image{ std::make_unique<Image>(Image{}) };
+        if (!image->loadFromFile(path)) return nullptr;
+
+        std::unique_ptr<Texture> texture{ std::make_unique<Texture>(Texture{})};
+
+        if( !texture->loadFromFile(path)) return nullptr;
+
+        std::unique_ptr<Sprite> sprite{
+            std::make_unique<Sprite>(Sprite{ *texture, IntRect{0, 0,Settings::heroWidth, Settings::heroHeight} })
+        };
+
+        return sprite;
 
 
         /*Image heroImg;
@@ -201,12 +229,16 @@ namespace Game {
     }
 
     ProgrammLogic::ProgrammLogic()
-        : fontPath_("fonts/arial.ttf")
+        : fontPath_(Settings::fontPath)
         , isMenu_(true)
         , errorQueue_()
+        , heroTexture_()
+        , hero_()
     {
         if(!font_.loadFromFile(fontPath_)) throw std::exception("Error load ttf");
-
+        if(!heroTexture_.loadFromFile(Settings::heroPathImage.data())) throw std::exception("Error load image");
+        hero_.setTexture(heroTexture_);
+        hero_.setTextureRect( IntRect{ 0, 0,Settings::heroWidth, Settings::heroHeight });
     }
 
     void ProgrammLogic::loop()
@@ -215,7 +247,7 @@ namespace Game {
 
 
 
-        RenderWindow window(sf::VideoMode(Settings::windowWidth, Settings::windowHeight), Settings::nameWindow.data());
+        RenderWindow window{ sf::VideoMode(Settings::windowWidth, Settings::windowHeight), Settings::nameWindow.data() };
        
         auto menu{ createMenu("PLAY", "EXIT")};
         while (window.isOpen())
@@ -236,13 +268,8 @@ namespace Game {
                     }
                 }
             }
-            if (!errorQueue_.empty()) {
-                window.close();
-                while (!errorQueue_.empty()) {
-                    std::cerr << errorQueue_.front() << "\n";
-                    errorQueue_.pop();
-                }
-            }
+
+            readErrors(window);
             
             window.clear();
 
