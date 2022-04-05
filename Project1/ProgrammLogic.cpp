@@ -57,10 +57,17 @@ namespace Game {
 
     void ProgrammLogic::startGame(RenderWindow& window)
     {
-        hero_.setPosition(
+        GameSpriteInfo heroGsi{
             static_cast<float>((Settings::windowWidth - Settings::heroWidth) >> 1)
             , static_cast<float>((Settings::windowHeight - Settings::heroHeight) >> 1)
-        );
+            , 0
+            , 0
+            , Settings::heroWidth
+            , Settings::heroWidth
+        };
+
+        GameSprite heroGs{ Settings::heroPathImage.data(), heroGsi };
+        Sprite hero{ heroGs() };
         
         Clock clock;
         float currentFrame{};
@@ -69,10 +76,10 @@ namespace Game {
         while (!Keyboard::isKeyPressed(Keyboard::Escape)) {  
             if (readEvent(window)) break;
             float time{ static_cast<float>(clock.getElapsedTime().asMicroseconds()) };
-            time /= 300;
+            time /= 800;
             clock.restart();
             float speed{ time * 0.1f };
-            currentFrame += 0.005f * time;
+            currentFrame += 0.01f * time;
             isKeyPresed = false;
             if (currentFrame > Settings::heroMaxFrame) currentFrame -= Settings::heroMaxFrame;
 
@@ -81,16 +88,16 @@ namespace Game {
             if (Keyboard::isKeyPressed(Keyboard::Left) || Keyboard::isKeyPressed(Keyboard::A)) {
                 isKeyPresed = true;
                 horizontDirection = Direction::Left;
-                hero_.move(-speed, 0);
-                hero_.setTextureRect(IntRect{
+                hero.move(-speed, 0);
+                hero.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                     });
             }
             else if (Keyboard::isKeyPressed(Keyboard::Right) || Keyboard::isKeyPressed(Keyboard::D)) {
                 isKeyPresed = true;
                 horizontDirection = Direction::Right;
-                hero_.move(speed, 0);
-                hero_.setTextureRect(IntRect{
+                hero.move(speed, 0);
+                hero.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                     });
             }
@@ -99,49 +106,49 @@ namespace Game {
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    hero_.setTextureRect(IntRect{
+                    hero.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 default:
-                    hero_.setTextureRect(IntRect{
+                    hero.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 }
-                hero_.move(0, -speed);
+                hero.move(0, -speed);
             }
             else if (Keyboard::isKeyPressed(Keyboard::Down) || Keyboard::isKeyPressed(Keyboard::S)) {
                 isKeyPresed = true;
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    hero_.setTextureRect(IntRect{
+                    hero.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 default:
-                    hero_.setTextureRect(IntRect{
+                    hero.setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 }
-                hero_.move(0, speed);
+                hero.move(0, speed);
             }
             if (!isKeyPresed) {
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    hero_.setTextureRect(IntRect{ Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight });
+                    hero.setTextureRect(IntRect{ Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight });
                     break;
                 default:
-                    hero_.setTextureRect(IntRect{ 0, 0, Settings::heroWidth, Settings::heroHeight });
+                    hero.setTextureRect(IntRect{ 0, 0, Settings::heroWidth, Settings::heroHeight });
                     break;
                 }                
             }
           
             window.clear();
-            window.draw(hero_);
+            window.draw(hero);
             window.display();
         }
     }

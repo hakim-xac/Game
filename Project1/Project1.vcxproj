@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GameSprite.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProgrammLogic.cpp" />
     <ClCompile Include="Settings.cpp" />
@@ -156,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Enums.h" />
+    <ClInclude Include="GameSprite.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="ProgrammLogic.h" />
     <ClInclude Include="Settings.h" />

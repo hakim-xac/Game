@@ -13,4 +13,5 @@
 
 #include "Settings.h"
 #include "Enums.h"
+#include "GameSprite.h"
 #include "ProgrammLogic.h"
