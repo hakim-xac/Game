@@ -15,8 +15,7 @@ namespace Game {
         std::string fontPath_;
         bool isMenu_;
         std::queue<std::string> errorQueue_;
-        Texture heroTexture_;
-        Sprite hero_;
+        GameSpriteInfo heroGsi_;
 
     private:
         template <typename... T>

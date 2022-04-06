@@ -66,8 +66,9 @@ namespace Game {
             , Settings::heroWidth
         };
 
-        GameSprite heroGs{ Settings::heroPathImage.data(), heroGsi };
-        Sprite hero{ heroGs() };
+        auto heroGs{ std::make_unique<GameSprite>( Settings::heroPathImage.data(), heroGsi ) };
+
+        Sprite hero{ heroGs->getSprite() };
         
         Clock clock;
         float currentFrame{};
@@ -239,13 +240,17 @@ namespace Game {
         : fontPath_(Settings::fontPath)
         , isMenu_(true)
         , errorQueue_()
-        , heroTexture_()
-        , hero_()
+        , heroGsi_{
+            static_cast<float>((Settings::windowWidth - Settings::heroWidth) >> 1)
+            , static_cast<float>((Settings::windowHeight - Settings::heroHeight) >> 1)
+            , 0
+            , 0
+            , Settings::heroWidth
+            , Settings::heroWidth
+        }
     {
         if(!font_.loadFromFile(fontPath_)) throw std::exception("Error load ttf");
-        if(!heroTexture_.loadFromFile(Settings::heroPathImage.data())) throw std::exception("Error load image");
-        hero_.setTexture(heroTexture_);
-        hero_.setTextureRect( IntRect{ 0, 0,Settings::heroWidth, Settings::heroHeight });
+
     }
 
     void ProgrammLogic::loop()
