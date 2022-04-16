@@ -158,6 +158,7 @@
   <ItemGroup>
     <ClInclude Include="Enums.h" />
     <ClInclude Include="GameSprite.h" />
+    <ClInclude Include="Logs.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="ProgrammLogic.h" />
     <ClInclude Include="Settings.h" />

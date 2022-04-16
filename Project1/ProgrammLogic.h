@@ -11,32 +11,39 @@ namespace Game {
 
     class ProgrammLogic {
 
+    public:
+        ProgrammLogic();
+        void loop();
+        constexpr void addUser();
+
+    private:
+        template <typename... T>
+        std::vector<GameText> createMenu(T&& ...args);
+        
+        template <typename... Args>
+        void writeErrors(Args&&... args); 
+
+        template <typename... Args>
+        constexpr std::string generateString(char del, Args&&... args);
+
+
+        GameText createButton(const std::string&& str, int x, int y, bool relativePosition = false);
+        std::string_view getActiveItemMenu(std::vector<GameText>& menu, const RenderWindow& window);
+        std::string strToLower(std::string str);
+        constexpr std::string delimiter(char del = '=');
+
+        void stringToOut(const std::string& str, std::ostream& out = std::cerr) const;
+        void startGame(RenderWindow& window);
+        bool readEvent(RenderWindow& window);
+        void readErrors(RenderWindow& window);
+        void menuDraw(RenderWindow& window, const std::vector<Game::GameText>& menu) const;
+        std::string timeToString(std::time_t&& time);
+
         Font font_;
         std::string fontPath_;
         bool isMenu_;
         std::queue<std::string> errorQueue_;
         GameSpriteInfo heroGsi_;
-
-    private:
-        template <typename... T>
-        std::vector<GameText> createMenu(T&& ...args);
-
-        
-        void toLog(std::string&& str);
-        GameText createButton(const std::string&& str, int x, int y, bool relativePosition = false);
-        std::string_view getActiveItemMenu(std::vector<GameText>& menu, const RenderWindow& window);
-        std::string strToLower(std::string str);
-        void delimiter(char c = '=', std::ostream& out = std::cerr);
-        void stringToOut(const std::string& str, std::ostream& out = std::cerr) const;
-        void startGame(RenderWindow& window);
-        bool readEvent(RenderWindow& window);
-        void readErrors(RenderWindow& window);
-        std::string timeToString(std::time_t&& time);
-        std::unique_ptr<Sprite> gameSprite(const std::string& path, const Position& pos, RenderWindow& window);
-    public:
-        ProgrammLogic();
-        void loop();
-        constexpr void addUser();
 
     };
 
@@ -80,4 +87,44 @@ namespace Game {
         return vec;
     }
 
-}
+
+    template<typename ...Args>
+    inline void ProgrammLogic::writeErrors(Args&& ...args)
+    {
+        errorQueue_.push("/*");
+        ((errorQueue_.push(std::forward<Args>(args))), ...);
+        errorQueue_.push("*/");
+    }
+
+
+    template <typename... Args>
+    constexpr std::string ProgrammLogic::generateString(char del, Args&&... args)
+    {
+        static_assert(sizeof...(args) > 0
+            , "Template parameters must be greater than 1");
+
+        if constexpr (sizeof...(args) > 0) {
+
+            static_assert((std::is_same_v<std::decay_t<Args>, std::string> && ...)
+                , "All arguments must be of type std::string");
+            std::array<std::string, sizeof...(args)> array{ std::forward<Args>(args)... };
+
+            size_t size{ std::accumulate(array.begin(), array.end(), size_t(0),[](size_t lhs, auto rhs) {
+                return lhs + rhs.size() + 1;
+                }) + 4 };
+
+            assert(size <= Settings::maxLengthTextInLog);
+
+            std::string tmp{"# "};
+            for (auto&& elem: array) {
+                tmp += elem + " ";
+            }
+            tmp += std::string(Settings::maxLengthTextInLog - tmp.size() - 2, del);
+            tmp += "#\n";
+            assert(tmp.size() <= Settings::maxLengthTextInLog);
+            return tmp;
+        }
+    }
+
+
+    }

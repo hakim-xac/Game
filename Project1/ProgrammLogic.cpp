@@ -2,11 +2,6 @@
 
 namespace Game {
 
-    void ProgrammLogic::toLog(std::string&& str)
-    {
-        errorQueue_.push(str);        
-    }
-
 
     GameText ProgrammLogic::createButton(const std::string&& str, int x, int y, bool relativePosition)
     {
@@ -41,11 +36,19 @@ namespace Game {
         return str;
     }
 
-    void ProgrammLogic::delimiter(char c, std::ostream& out)
+ /*   void ProgrammLogic::delimiter(char c, std::ostream& out)
     {
         out.fill(c);
         out.width(Settings::maxLengthTextInLog);
         out << "#" << "#\n";
+    }*/
+
+    constexpr std::string ProgrammLogic::delimiter(char del)
+    {
+        std::string tmp( Settings::maxLengthTextInLog, del );
+        tmp.at(0) = tmp.at(tmp.size()-2) = '#';
+        tmp.back() = '\n';
+        return tmp;
     }
 
     void ProgrammLogic::stringToOut(const std::string& str, std::ostream& out) const
@@ -57,23 +60,18 @@ namespace Game {
 
     void ProgrammLogic::startGame(RenderWindow& window)
     {
-        GameSpriteInfo heroGsi{
-            static_cast<float>((Settings::windowWidth - Settings::heroWidth) >> 1)
-            , static_cast<float>((Settings::windowHeight - Settings::heroHeight) >> 1)
-            , 0
-            , 0
-            , Settings::heroWidth
-            , Settings::heroWidth
-        };
 
-        auto heroGs{ std::make_unique<GameSprite>( Settings::heroPathImage.data(), heroGsi ) };
-
-        Sprite hero{ heroGs->getSprite() };
+        auto hero{ std::make_unique<GameSprite>( Settings::heroPathTexture.data() ) };
+        if (hero->getIsInit()) {
+            writeErrors("if (!hero->getIsInit())", "fghfhffghf");
+            return;
+        }
         
+
         Clock clock;
         float currentFrame{};
         Direction horizontDirection { Direction::Right };
-        bool isKeyPresed;
+        //bool isKeyPresed;
         while (!Keyboard::isKeyPressed(Keyboard::Escape)) {  
             if (readEvent(window)) break;
             float time{ static_cast<float>(clock.getElapsedTime().asMicroseconds()) };
@@ -81,7 +79,7 @@ namespace Game {
             clock.restart();
             float speed{ time * 0.1f };
             currentFrame += 0.01f * time;
-            isKeyPresed = false;
+            bool isKeyPresed = false;
             if (currentFrame > Settings::heroMaxFrame) currentFrame -= Settings::heroMaxFrame;
 
             int currentFrameInt{ static_cast<int>(currentFrame) };
@@ -89,16 +87,16 @@ namespace Game {
             if (Keyboard::isKeyPressed(Keyboard::Left) || Keyboard::isKeyPressed(Keyboard::A)) {
                 isKeyPresed = true;
                 horizontDirection = Direction::Left;
-                hero.move(-speed, 0);
-                hero.setTextureRect(IntRect{
+                hero->getSprite().move(-speed, 0);
+                hero->getSprite().setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                     });
             }
             else if (Keyboard::isKeyPressed(Keyboard::Right) || Keyboard::isKeyPressed(Keyboard::D)) {
                 isKeyPresed = true;
                 horizontDirection = Direction::Right;
-                hero.move(speed, 0);
-                hero.setTextureRect(IntRect{
+                hero->getSprite().move(speed, 0);
+                hero->getSprite().setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                     });
             }
@@ -107,49 +105,49 @@ namespace Game {
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    hero.setTextureRect(IntRect{
+                    hero->getSprite().setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 default:
-                    hero.setTextureRect(IntRect{
+                    hero->getSprite().setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 }
-                hero.move(0, -speed);
+                hero->getSprite().move(0, -speed);
             }
             else if (Keyboard::isKeyPressed(Keyboard::Down) || Keyboard::isKeyPressed(Keyboard::S)) {
                 isKeyPresed = true;
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    hero.setTextureRect(IntRect{
+                    hero->getSprite().setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt + Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 default:
-                    hero.setTextureRect(IntRect{
+                    hero->getSprite().setTextureRect(IntRect{
                     Settings::heroWidth * currentFrameInt, 0, Settings::heroWidth, Settings::heroHeight
                         });
                     break;
                 }
-                hero.move(0, speed);
+                hero->getSprite().move(0, speed);
             }
             if (!isKeyPresed) {
                 switch (horizontDirection)
                 {
                 case Game::Direction::Left:
-                    hero.setTextureRect(IntRect{ Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight });
+                    hero->getSprite().setTextureRect(IntRect{ Settings::heroWidth, 0, -Settings::heroWidth, Settings::heroHeight });
                     break;
                 default:
-                    hero.setTextureRect(IntRect{ 0, 0, Settings::heroWidth, Settings::heroHeight });
+                    hero->getSprite().setTextureRect(IntRect{ 0, 0, Settings::heroWidth, Settings::heroHeight });
                     break;
                 }                
             }
           
             window.clear();
-            window.draw(hero);
+            window.draw(hero->getSprite() );
             window.display();
         }
     }
@@ -171,19 +169,35 @@ namespace Game {
     {
         if (!errorQueue_.empty()) {
             window.close();
-            std::cerr.setf(std::ios::left, std::ios::adjustfield);
             while (!errorQueue_.empty()) {
-
-                delimiter();
-                delimiter(' ');
-                stringToOut("# time: " + timeToString(std::time(nullptr)));
-                stringToOut("# error: " + errorQueue_.front() + "\"");
-                delimiter(' ');
-                delimiter();
+                auto elem{ errorQueue_.front() };
+                if (elem == "/*") {
+                    std::cerr << delimiter();
+                    std::cerr << delimiter(' ');
+                    std::cerr << generateString('-', std::string("time:"), timeToString(std::time(nullptr)));
+                }
+                else if (elem == "*/") {
+                    std::cerr << delimiter(' ');
+                    std::cerr << delimiter();
+                }
+                else {
+                    std::cerr << generateString('.', std::string("error:"), elem);
+                }
 
                 errorQueue_.pop();
             }
         }
+    }
+
+    void ProgrammLogic::menuDraw(RenderWindow& window, const std::vector<Game::GameText>& menu) const
+    {
+
+        if (isMenu_) {
+            window.clear();
+            for (auto&& el : menu) window.draw(el.text);
+            window.display();
+        }
+
     }
 
     std::string ProgrammLogic::timeToString(std::time_t&& time)
@@ -196,33 +210,6 @@ namespace Game {
         return ss.str();
     }
 
-    std::unique_ptr<Sprite> ProgrammLogic::gameSprite(const std::string& path, const Position& pos, RenderWindow& window)
-    {
-        std::unique_ptr<Image> image{ std::make_unique<Image>(Image{}) };
-        if (!image->loadFromFile(path)) return nullptr;
-
-        std::unique_ptr<Texture> texture{ std::make_unique<Texture>(Texture{})};
-
-        if( !texture->loadFromFile(path)) return nullptr;
-
-        std::unique_ptr<Sprite> sprite{
-            std::make_unique<Sprite>(Sprite{ *texture, IntRect{0, 0,Settings::heroWidth, Settings::heroHeight} })
-        };
-
-        return sprite;
-
-
-        /*Image heroImg;
-        heroImg.loadFromFile("sprites/rob2.png");
-        Texture heroTexture;
-        heroTexture.loadFromImage(heroImg);
-        Sprite heroSprite{ heroTexture, IntRect{ 0, 0,Settings::heroWidth, Settings::heroHeight } };
-
-        heroSprite.setPosition(
-            static_cast<float>((Settings::windowWidth - Settings::heroWidth) >> 1)
-            , static_cast<float>((Settings::windowHeight - Settings::heroHeight) >> 1)
-        );*/
-    }
 
     std::string_view ProgrammLogic::getActiveItemMenu(std::vector<GameText>& menu,const RenderWindow& window)
     {
@@ -264,7 +251,6 @@ namespace Game {
         auto menu{ createMenu("PLAY", "EXIT")};
         while (window.isOpen())
         {
-
             readEvent(window);
 
             if (isMenu_) {
@@ -283,13 +269,8 @@ namespace Game {
 
             readErrors(window);
             
-            window.clear();
-
-            if (isMenu_) {
-                for (auto&& el : menu) window.draw(el.text);
-            }
-
-            window.display();
+            menuDraw(window, menu); // TODO сделать вариабельным
+            
         }
 
     }
