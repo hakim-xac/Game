@@ -20,6 +20,6 @@ namespace Game {
 
         static constexpr std::string_view nameWindow{ "GAME BY xACx" };
         static constexpr std::string_view fontPath{ "fonts/arial.ttf" };
-        static constexpr std::string_view heroPathImage{ "sprites/rob2.png" };
+        static constexpr std::string_view heroPathTexture{ "sprites/rob.png" };
     };
 }

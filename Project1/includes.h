@@ -15,3 +15,4 @@
 #include "Enums.h"
 #include "GameSprite.h"
 #include "ProgrammLogic.h"
+#include "Logs.h"
