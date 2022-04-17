@@ -21,10 +21,17 @@ namespace Game {
         std::vector<GameText> createMenu(T&& ...args);
         
         template <typename... Args>
-        void writeErrors(Args&&... args); 
+        void writeToLog(Args&&... args);
+
+
+        template <typename... Args>
+        void writeReadToLog(RenderWindow& window, IsClosedWindow isw, Args&&... args);
 
         template <typename... Args>
         constexpr std::string generateString(char del, Args&&... args);
+
+        template <typename... Args>
+        constexpr std::pair<bool, bool> addToResourseVec(Args&&... args);
 
 
         GameText createButton(const std::string&& str, int x, int y, bool relativePosition = false);
@@ -35,7 +42,7 @@ namespace Game {
         void stringToOut(const std::string& str, std::ostream& out = std::cerr) const;
         void startGame(RenderWindow& window);
         bool readEvent(RenderWindow& window);
-        void readErrors(RenderWindow& window);
+        void readInLog(RenderWindow& window, IsClosedWindow isw = IsClosedWindow::YES);
         void menuDraw(RenderWindow& window, const std::vector<Game::GameText>& menu) const;
         std::string timeToString(std::time_t&& time);
 
@@ -59,7 +66,8 @@ namespace Game {
 
 
     template<typename ...T>
-    inline std::vector<GameText> ProgrammLogic::createMenu(T&& ...args)
+    inline std::vector<GameText> ProgrammLogic
+        ::createMenu(T&& ...args)
     {
 
         std::vector<std::string> v{std::forward<T>(args)...};
@@ -71,7 +79,7 @@ namespace Game {
             if (el.size() < minLength) minLength = el.size();
             });
 
-        size_t centerWidth{ 800 >> 1 };
+        size_t centerWidth{ Settings::windowWidth >> 1 };
         size_t centerHeight{ Settings::windowHeight >> 1 };
         size_t posHeight{ centerHeight - Settings::menuTextFontSize * v.size() };
 
@@ -89,16 +97,32 @@ namespace Game {
 
 
     template<typename ...Args>
-    inline void ProgrammLogic::writeErrors(Args&& ...args)
+    inline void ProgrammLogic
+        ::writeToLog(Args&& ...args)
     {
+        static_assert(sizeof...(args) > 0
+            , "Template parameters must be greater than 1");
+
         errorQueue_.push("/*");
         ((errorQueue_.push(std::forward<Args>(args))), ...);
         errorQueue_.push("*/");
     }
 
 
+    template<typename ...Args>
+    inline void ProgrammLogic
+        ::writeReadToLog(RenderWindow& window, IsClosedWindow isw, Args&& ...args)
+    {
+        static_assert(sizeof...(args) > 0
+            , "Template parameters must be greater than 1");
+        writeToLog(std::forward<Args>(args)...);
+        readInLog(window, isw);
+    }
+
+
     template <typename... Args>
-    constexpr std::string ProgrammLogic::generateString(char del, Args&&... args)
+    constexpr std::string ProgrammLogic
+        ::generateString(char del, Args&&... args)
     {
         static_assert(sizeof...(args) > 0
             , "Template parameters must be greater than 1");
@@ -124,6 +148,20 @@ namespace Game {
             assert(tmp.size() <= Settings::maxLengthTextInLog);
             return tmp;
         }
+    }
+
+
+    template <typename... Args>
+    inline constexpr std::pair<bool, bool> ProgrammLogic
+        ::addToResourseVec(Args&& ...args)
+    {
+        /*static_assert((std::is_same_v<std::decay_t<Args>, GameSprite> && ...)
+            , "All arguments must be of type std::unique_ptr<GameSprite>");*/
+
+       // std::vector<std::unique_ptr<GameSprite>> vec = { std::forward<Args>(args)... };
+        
+
+        return { false, false };
     }
 
 

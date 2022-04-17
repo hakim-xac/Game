@@ -15,9 +15,16 @@ namespace Game {
         , Centrer
     };
 
-    enum class CodeErrors {
-        NotError
-        , FileNotFound
+    enum class CodeBase {        
+        UnknownCode
+        , AllGood
+        , NotError
+        , ErrorFileNotFound
+    };
+
+    enum class IsClosedWindow {
+        YES
+        , NO
     };
 
 

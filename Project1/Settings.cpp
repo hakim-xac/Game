@@ -1,11 +1,13 @@
 ﻿#include "Settings.h"
 
-std::string_view Game::Settings::showError(CodeErrors key)
+const std::string& Game::Settings::showCode(CodeBase key)
 {
-    static std::map<CodeErrors, std::string_view> base{
-        { CodeErrors::FileNotFound, "File not found!" }
+    static std::map<CodeBase, std::string> base{
+        { CodeBase::UnknownCode, "Unknown code!" }
+        , { CodeBase::AllGood, "Everything is good!" }
+        , { CodeBase::ErrorFileNotFound, "File not found!" }
     };
-    if (base.find(key) == base.end()) return std::string_view{ "Unique bug! " };
+    if (base.find(key) == base.end()) return base[CodeBase::UnknownCode];
     
     return base[key];
 }

@@ -33,6 +33,8 @@ namespace Game {
 
 	public:
 		GameSprite(const std::string& path, const GameSpriteInfo& gsi);
+		GameSprite(const GameSprite& gs) noexcept;
+		GameSprite(GameSprite&& gs) = default;
 		GameSprite(const std::string& path, RespawnPosition rp = RespawnPosition::Center);
 		Sprite& getSprite();
 		bool getIsInit() const;

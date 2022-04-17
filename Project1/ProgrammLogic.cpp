@@ -36,12 +36,6 @@ namespace Game {
         return str;
     }
 
- /*   void ProgrammLogic::delimiter(char c, std::ostream& out)
-    {
-        out.fill(c);
-        out.width(Settings::maxLengthTextInLog);
-        out << "#" << "#\n";
-    }*/
 
     constexpr std::string ProgrammLogic::delimiter(char del)
     {
@@ -51,6 +45,7 @@ namespace Game {
         return tmp;
     }
 
+
     void ProgrammLogic::stringToOut(const std::string& str, std::ostream& out) const
     {
         std::cerr.fill(' ');
@@ -58,20 +53,40 @@ namespace Game {
         std::cerr << str << "#" << "\n";
     }
 
+
     void ProgrammLogic::startGame(RenderWindow& window)
     {
 
         auto hero{ std::make_unique<GameSprite>( Settings::heroPathTexture.data() ) };
-        if (hero->getIsInit()) {
-            writeErrors("if (!hero->getIsInit())", "fghfhffghf");
+        auto hero2{ std::make_unique<GameSprite>( Settings::heroPathTexture.data() ) };
+        
+        GameSprite enemy{ Settings::enemyPathTexture.data() };
+
+        //GameSprite* hero{ &h2 };
+        //std::vector<GameSprite> vec{ enemy };
+        auto resourse{ addToResourseVec(hero2) };
+
+        /*if (!hero->getIsInit()) {
+            writeToLog("ProgrammLogic.cpp", "if (!hero->getIsInit())", Settings::showCode(CodeBase::ErrorFileNotFound));
             return;
         }
-        
+        if (!enemy->getIsInit()) {
+            writeToLog("ProgrammLogic.cpp", "if (!enemy->getIsInit())", Settings::showCode(CodeBase::ErrorFileNotFound));
+            return;
+        }    */   
+
+        writeReadToLog(window
+            , IsClosedWindow::NO
+            , "ProgrammLogic.cpp"
+            , "All resources loaded"
+            , Settings::showCode(CodeBase::AllGood));
+
+
 
         Clock clock;
         float currentFrame{};
         Direction horizontDirection { Direction::Right };
-        //bool isKeyPresed;
+
         while (!Keyboard::isKeyPressed(Keyboard::Escape)) {  
             if (readEvent(window)) break;
             float time{ static_cast<float>(clock.getElapsedTime().asMicroseconds()) };
@@ -165,10 +180,10 @@ namespace Game {
         return false;
     }
 
-    void ProgrammLogic::readErrors(RenderWindow& window)
+    void ProgrammLogic::readInLog(RenderWindow& window, IsClosedWindow isw)
     {
         if (!errorQueue_.empty()) {
-            window.close();
+            if(isw == IsClosedWindow::YES) window.close();
             while (!errorQueue_.empty()) {
                 auto elem{ errorQueue_.front() };
                 if (elem == "/*") {
@@ -181,7 +196,7 @@ namespace Game {
                     std::cerr << delimiter();
                 }
                 else {
-                    std::cerr << generateString('.', std::string("error:"), elem);
+                    std::cerr << generateString('.', std::string("message:"), elem);
                 }
 
                 errorQueue_.pop();
@@ -245,7 +260,6 @@ namespace Game {
         ////////////////////////////////////////////// LOAD RESOURSE ///////////////////////////////////////////////
 
 
-
         RenderWindow window{ sf::VideoMode(Settings::windowWidth, Settings::windowHeight), Settings::nameWindow.data() };
        
         auto menu{ createMenu("PLAY", "EXIT")};
@@ -260,6 +274,7 @@ namespace Game {
                 if (Mouse::isButtonPressed(Mouse::Left)) {
                     if (activeName == "exit") {
                         window.close();
+                        writeToLog("Application closed");
                     }
                     else if (activeName == "play") {
                         startGame(window);
@@ -267,7 +282,7 @@ namespace Game {
                 }
             }
 
-            readErrors(window);
+            readInLog(window);
             
             menuDraw(window, menu); // TODO сделать вариабельным
             

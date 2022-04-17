@@ -27,6 +27,12 @@ namespace Game {
 		Init(path);		
 	}
 
+	GameSprite::GameSprite(const GameSprite& gs) noexcept
+		: texture_(new Texture(*gs.texture_.get()))
+		, sprite_(new Sprite(*gs.sprite_.get()))
+		, gsi_(gs.gsi_)
+		, init_(gs.init_) {}
+
 
 	GameSprite::GameSprite(const std::string& path, RespawnPosition rp)
 		: texture_(std::make_unique<Texture>())
